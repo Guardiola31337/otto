@@ -16,14 +16,14 @@
 
 package com.squareup.otto;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -86,8 +86,7 @@ public class BusTest {
 
     final List<Object> objectEvents = new ArrayList<Object>();
     Object objCatcher = new Object() {
-      @SuppressWarnings("unused")
-      @Subscribe public void eat(Object food) {
+      @SuppressWarnings("unused") @Subscribe public void eat(Object food) {
         objectEvents.add(food);
       }
     };
@@ -105,20 +104,15 @@ public class BusTest {
 
     // Check the StringCatcher...
     List<String> stringEvents = stringCatcher.getEvents();
-    assertEquals("Only one String should be delivered.",
-        1, stringEvents.size());
-    assertEquals("Correct string should be delivered.",
-        EVENT, stringEvents.get(0));
+    assertEquals("Only one String should be delivered.", 1, stringEvents.size());
+    assertEquals("Correct string should be delivered.", EVENT, stringEvents.get(0));
 
     // Check the Catcher<Object>...
-    assertEquals("Three Objects should be delivered.",
-        3, objectEvents.size());
-    assertEquals("String fixture must be first object delivered.",
-        EVENT, objectEvents.get(0));
-    assertEquals("Object fixture must be second object delivered.",
-        OBJ_EVENT, objectEvents.get(1));
-    assertEquals("Comparable fixture must be thirdobject delivered.",
-        COMP_EVENT, objectEvents.get(2));
+    assertEquals("Three Objects should be delivered.", 3, objectEvents.size());
+    assertEquals("String fixture must be first object delivered.", EVENT, objectEvents.get(0));
+    assertEquals("Object fixture must be second object delivered.", OBJ_EVENT, objectEvents.get(1));
+    assertEquals("Comparable fixture must be thirdobject delivered.", COMP_EVENT,
+        objectEvents.get(2));
   }
 
   @Test public void deadEventForwarding() {
@@ -130,8 +124,7 @@ public class BusTest {
 
     List<DeadEvent> events = catcher.getEvents();
     assertEquals("One dead event should be delivered.", 1, events.size());
-    assertEquals("The dead event should wrap the original event.",
-        EVENT, events.get(0).event);
+    assertEquals("The dead event should wrap the original event.", EVENT, events.get(0).event);
   }
 
   @Test public void deadEventPosting() {
@@ -141,10 +134,8 @@ public class BusTest {
     bus.post(new DeadEvent(this, EVENT));
 
     List<DeadEvent> events = catcher.getEvents();
-    assertEquals("The explicit DeadEvent should be delivered.",
-        1, events.size());
-    assertEquals("The dead event must not be re-wrapped.",
-        EVENT, events.get(0).event);
+    assertEquals("The explicit DeadEvent should be delivered.", 1, events.size());
+    assertEquals("The dead event must not be re-wrapped.", EVENT, events.get(0).event);
   }
 
   @Test public void testNullInteractions() {
@@ -194,7 +185,8 @@ public class BusTest {
   @Test public void subscribingOrProducingOnlyAllowedOnPublicMethods() {
     try {
       bus.register(new Object() {
-        @Subscribe protected void method(Object o) {}
+        @Subscribe protected void method(Object o) {
+        }
       });
       fail();
     } catch (IllegalArgumentException expected) {
@@ -202,45 +194,54 @@ public class BusTest {
     }
     try {
       bus.register(new Object() {
-        @Subscribe void method(Object o) {}
+        @Subscribe void method(Object o) {
+        }
       });
       fail();
     } catch (IllegalArgumentException expected) {
     }
     try {
       bus.register(new Object() {
-        @Subscribe private void method(Object o) {}
+        @Subscribe private void method(Object o) {
+        }
       });
       fail();
     } catch (IllegalArgumentException expected) {
     }
     try {
       bus.register(new Object() {
-        @Produce protected Object method() { return null; }
+        @Produce protected Object method() {
+          return null;
+        }
       });
       fail();
     } catch (IllegalArgumentException expected) {
     }
     try {
       bus.register(new Object() {
-        @Produce Object method() { return null; }
+        @Produce Object method() {
+          return null;
+        }
       });
       fail();
     } catch (IllegalArgumentException expected) {
     }
     try {
       bus.register(new Object() {
-        @Produce private Object method() { return null; }
+        @Produce private Object method() {
+          return null;
+        }
       });
       fail();
     } catch (IllegalArgumentException expected) {
     }
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void voidProducerThrowsException() throws Exception {
+  @Test(expected = IllegalArgumentException.class) public void voidProducerThrowsException()
+      throws Exception {
     class VoidProducer {
-      @Produce public void things() {}
+      @Produce public void things() {
+      }
     }
     bus.register(new VoidProducer());
   }
@@ -287,19 +288,17 @@ public class BusTest {
     expectedEvents.add(EVENT);
     expectedEvents.add(EVENT);
 
-    assertEquals("Two correct events should be delivered.",
-                 expectedEvents, catcher1.getEvents());
+    assertEquals("Two correct events should be delivered.", expectedEvents, catcher1.getEvents());
 
-    assertEquals("One correct event should be delivered.",
-        Arrays.asList(EVENT), catcher2.getEvents());
+    assertEquals("One correct event should be delivered.", Arrays.asList(EVENT),
+        catcher2.getEvents());
 
     bus.unregister(catcher1);
     bus.post(EVENT);
 
-    assertEquals("Shouldn't catch any more events when unregistered.",
-                 expectedEvents, catcher1.getEvents());
-    assertEquals("Two correct events should be delivered.",
-                 expectedEvents, catcher2.getEvents());
+    assertEquals("Shouldn't catch any more events when unregistered.", expectedEvents,
+        catcher1.getEvents());
+    assertEquals("Two correct events should be delivered.", expectedEvents, catcher2.getEvents());
 
     try {
       bus.unregister(catcher1);
@@ -310,10 +309,66 @@ public class BusTest {
 
     bus.unregister(catcher2);
     bus.post(EVENT);
-    assertEquals("Shouldn't catch any more events when unregistered.",
-                 expectedEvents, catcher1.getEvents());
-    assertEquals("Shouldn't catch any more events when unregistered.",
-                 expectedEvents, catcher2.getEvents());
+    assertEquals("Shouldn't catch any more events when unregistered.", expectedEvents,
+        catcher1.getEvents());
+    assertEquals("Shouldn't catch any more events when unregistered.", expectedEvents,
+        catcher2.getEvents());
+  }
+
+  @Test public void unregisterCallback() {
+    final StringCatcher catcher1 = new StringCatcher();
+    final StringCatcher catcher2 = new StringCatcher();
+    Callback catcher1Callback = new Callback<String>() {
+      @Override public void call(String event) throws InvocationTargetException {
+        catcher1.hereHaveAString(event);
+      }
+    };
+    Callback catcher2Callback = new Callback<String>() {
+      @Override public void call(String event) throws InvocationTargetException {
+        catcher2.hereHaveAString(event);
+      }
+    };
+    try {
+      bus.unregister(String.class, catcher1Callback);
+      fail("Attempting to unregister an unregistered object succeeded");
+    } catch (IllegalArgumentException expected) {
+      // OK.
+    }
+
+    bus.register(String.class, catcher1Callback);
+    bus.post(EVENT);
+    bus.register(String.class, catcher2Callback);
+    bus.post(EVENT);
+
+    List<String> expectedEvents = new ArrayList<String>();
+    expectedEvents.add(EVENT);
+    expectedEvents.add(EVENT);
+
+    assertEquals("Two correct events should be delivered.", expectedEvents, catcher1.getEvents());
+
+    assertEquals("One correct event should be delivered.", Arrays.asList(EVENT),
+        catcher2.getEvents());
+
+    bus.unregister(String.class, catcher1Callback);
+    bus.post(EVENT);
+
+    assertEquals("Shouldn't catch any more events when unregistered.", expectedEvents,
+        catcher1.getEvents());
+    assertEquals("Two correct events should be delivered.", expectedEvents, catcher2.getEvents());
+
+    try {
+      bus.unregister(String.class, catcher1Callback);
+      fail("Attempting to unregister an unregistered object succeeded");
+    } catch (IllegalArgumentException expected) {
+      // OK.
+    }
+
+    bus.unregister(String.class, catcher2Callback);
+    bus.post(EVENT);
+    assertEquals("Shouldn't catch any more events when unregistered.", expectedEvents,
+        catcher1.getEvents());
+    assertEquals("Shouldn't catch any more events when unregistered.", expectedEvents,
+        catcher2.getEvents());
   }
 
   @Test public void producingNullIsInvalid() {
@@ -362,21 +417,18 @@ public class BusTest {
   }
 
   private <T> void assertContains(T element, Collection<T> collection) {
-    assertTrue("Collection must contain " + element,
-        collection.contains(element));
+    assertTrue("Collection must contain " + element, collection.contains(element));
   }
 
   /**
    * A collector for DeadEvents.
    *
    * @author cbiffle
-   *
    */
   public static class GhostCatcher {
     private List<DeadEvent> events = new ArrayList<DeadEvent>();
 
-    @Subscribe
-    public void ohNoesIHaveDied(DeadEvent event) {
+    @Subscribe public void ohNoesIHaveDied(DeadEvent event) {
       events.add(event);
     }
 
@@ -399,13 +451,11 @@ public class BusTest {
     // Exists only for hierarchy mapping; no members.
   }
 
-  public interface HierarchyFixtureSubinterface
-      extends HierarchyFixtureInterface {
+  public interface HierarchyFixtureSubinterface extends HierarchyFixtureInterface {
     // Exists only for hierarchy mapping; no members.
   }
 
-  public static class HierarchyFixtureParent
-      implements HierarchyFixtureSubinterface {
+  public static class HierarchyFixtureParent implements HierarchyFixtureSubinterface {
     // Exists only for hierarchy mapping; no members.
   }
 
@@ -414,13 +464,11 @@ public class BusTest {
   }
 
   interface SubscriberInterface<T> {
-    @Subscribe
-    void subscribeToT(T value);
+    @Subscribe void subscribeToT(T value);
   }
 
   static class SubscriberImpl implements SubscriberInterface<Number> {
-    @Subscribe
-    public void subscribeToT(Number value) {
+    @Subscribe public void subscribeToT(Number value) {
       // No numbers are expected to be published.
       fail();
     }
@@ -435,5 +483,4 @@ public class BusTest {
     bus.register(catcher);
     bus.post(EVENT);
   }
-
 }

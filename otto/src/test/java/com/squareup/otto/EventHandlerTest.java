@@ -16,11 +16,10 @@
 
 package com.squareup.otto;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import org.junit.Before;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
@@ -41,7 +40,7 @@ public class EventHandlerTest {
   /**
    * Checks that a no-frills, no-issues method call is properly executed.
    *
-   * @throws Exception  if the aforementioned proper execution is not to be had.
+   * @throws Exception if the aforementioned proper execution is not to be had.
    */
   @Test public void basicMethodCall() throws Exception {
     Method method = getRecordingMethod();
@@ -51,14 +50,24 @@ public class EventHandlerTest {
     handler.handleEvent(FIXTURE_ARGUMENT);
 
     assertTrue("Handler must call provided method.", methodCalled);
-    assertSame("Handler argument must be *exactly* the provided object.",
-        methodArgument, FIXTURE_ARGUMENT);
+    assertSame("Handler argument must be *exactly* the provided object.", methodArgument,
+        FIXTURE_ARGUMENT);
   }
 
   /** Checks that EventHandler's constructor disallows null methods. */
   @Test public void rejectionOfNullMethods() {
     try {
       new EventHandler(this, null);
+      fail("EventHandler must immediately reject null methods.");
+    } catch (NullPointerException expected) {
+      // Hooray!
+    }
+  }
+
+  /** Checks that EventHandler's constructor disallows null callbacks. */
+  @Test public void rejectionOfNullCallbacks() {
+    try {
+      new EventHandler(null);
       fail("EventHandler must immediately reject null methods.");
     } catch (NullPointerException expected) {
       // Hooray!
@@ -117,7 +126,7 @@ public class EventHandlerTest {
    * Records the provided object in {@link #methodArgument} and sets
    * {@link #methodCalled}.
    *
-   * @param arg  argument to record.
+   * @param arg argument to record.
    */
   public void recordingMethod(Object arg) {
     if (methodCalled) {

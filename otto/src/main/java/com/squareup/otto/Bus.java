@@ -29,19 +29,22 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-
 /**
  * Dispatches events to listeners, and provides ways for listeners to register themselves.
  *
- * <p>The Bus allows publish-subscribe-style communication between components without requiring the components to
- * explicitly register with one another (and thus be aware of each other).  It is designed exclusively to replace
- * traditional Android in-process event distribution using explicit registration or listeners. It is <em>not</em> a
+ * <p>The Bus allows publish-subscribe-style communication between components without requiring the
+ * components to
+ * explicitly register with one another (and thus be aware of each other).  It is designed
+ * exclusively to replace
+ * traditional Android in-process event distribution using explicit registration or listeners. It is
+ * <em>not</em> a
  * general-purpose publish-subscribe system, nor is it intended for interprocess communication.
  *
  * <h2>Receiving Events</h2>
  * To receive events, an object should:
  * <ol>
- * <li>Expose a public method, known as the <i>event handler</i>, which accepts a single argument of the type of event
+ * <li>Expose a public method, known as the <i>event handler</i>, which accepts a single argument of
+ * the type of event
  * desired;</li>
  * <li>Mark it with a {@link com.squareup.otto.Subscribe} annotation;</li>
  * <li>Pass itself to an Bus instance's {@link #register(Object)} method.
@@ -49,15 +52,20 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * </ol>
  *
  * <h2>Posting Events</h2>
- * To post an event, simply provide the event object to the {@link #post(Object)} method.  The Bus instance will
+ * To post an event, simply provide the event object to the {@link #post(Object)} method.  The Bus
+ * instance will
  * determine the type of event and route it to all registered listeners.
  *
- * <p>Events are routed based on their type &mdash; an event will be delivered to any handler for any type to which the
- * event is <em>assignable.</em>  This includes implemented interfaces, all superclasses, and all interfaces implemented
+ * <p>Events are routed based on their type &mdash; an event will be delivered to any handler for
+ * any type to which the
+ * event is <em>assignable.</em>  This includes implemented interfaces, all superclasses, and all
+ * interfaces implemented
  * by superclasses.
  *
- * <p>When {@code post} is called, all registered handlers for an event are run in sequence, so handlers should be
- * reasonably quick.  If an event may trigger an extended process (such as a database load), spawn a thread or queue it
+ * <p>When {@code post} is called, all registered handlers for an event are run in sequence, so
+ * handlers should be
+ * reasonably quick.  If an event may trigger an extended process (such as a database load), spawn a
+ * thread or queue it
  * for later.
  *
  * <h2>Handler Methods</h2>
@@ -66,17 +74,22 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * <p>Handlers should not, in general, throw.  If they do, the Bus will wrap the exception and
  * re-throw it.
  *
- * <p>The Bus by default enforces that all interactions occur on the main thread.  You can provide an alternate
+ * <p>The Bus by default enforces that all interactions occur on the main thread.  You can provide
+ * an alternate
  * enforcement by passing a {@link ThreadEnforcer} to the constructor.
  *
  * <h2>Producer Methods</h2>
- * Producer methods should accept no arguments and return their event type. When a subscriber is registered for a type
- * that a producer is also already registered for, the subscriber will be called with the return value from the
+ * Producer methods should accept no arguments and return their event type. When a subscriber is
+ * registered for a type
+ * that a producer is also already registered for, the subscriber will be called with the return
+ * value from the
  * producer.
  *
  * <h2>Dead Events</h2>
- * If an event is posted, but no registered handlers can accept it, it is considered "dead."  To give the system a
- * second chance to handle dead events, they are wrapped in an instance of {@link com.squareup.otto.DeadEvent} and
+ * If an event is posted, but no registered handlers can accept it, it is considered "dead."  To
+ * give the system a
+ * second chance to handle dead events, they are wrapped in an instance of {@link
+ * com.squareup.otto.DeadEvent} and
  * reposted.
  *
  * <p>This class is safe for concurrent use.
@@ -89,11 +102,11 @@ public class Bus {
 
   /** All registered event handlers, indexed by event type. */
   private final ConcurrentMap<Class<?>, Set<EventHandler>> handlersByType =
-          new ConcurrentHashMap<Class<?>, Set<EventHandler>>();
+      new ConcurrentHashMap<Class<?>, Set<EventHandler>>();
 
   /** All registered event producers, index by event type. */
   private final ConcurrentMap<Class<?>, EventProducer> producersByType =
-          new ConcurrentHashMap<Class<?>, EventProducer>();
+      new ConcurrentHashMap<Class<?>, EventProducer>();
 
   /** Identifier used to differentiate the event bus instance. */
   private final String identifier;
@@ -127,7 +140,8 @@ public class Bus {
   /**
    * Creates a new Bus with the given {@code identifier} that enforces actions on the main thread.
    *
-   * @param identifier a brief name for this bus, for debugging purposes.  Should be a valid Java identifier.
+   * @param identifier a brief name for this bus, for debugging purposes.  Should be a valid Java
+   * identifier.
    */
   public Bus(String identifier) {
     this(ThreadEnforcer.MAIN, identifier);
@@ -143,10 +157,12 @@ public class Bus {
   }
 
   /**
-   * Creates a new Bus with the given {@code enforcer} for actions and the given {@code identifier}.
+   * Creates a new Bus with the given {@code enforcer} for actions and the given {@code
+   * identifier}.
    *
    * @param enforcer Thread enforcer for register, unregister, and post actions.
-   * @param identifier A brief name for this bus, for debugging purposes.  Should be a valid Java identifier.
+   * @param identifier A brief name for this bus, for debugging purposes.  Should be a valid Java
+   * identifier.
    */
   public Bus(ThreadEnforcer enforcer, String identifier) {
     this(enforcer, identifier, HandlerFinder.ANNOTATED);
@@ -156,11 +172,13 @@ public class Bus {
    * Test constructor which allows replacing the default {@code HandlerFinder}.
    *
    * @param enforcer Thread enforcer for register, unregister, and post actions.
-   * @param identifier A brief name for this bus, for debugging purposes.  Should be a valid Java identifier.
-   * @param handlerFinder Used to discover event handlers and producers when registering/unregistering an object.
+   * @param identifier A brief name for this bus, for debugging purposes.  Should be a valid Java
+   * identifier.
+   * @param handlerFinder Used to discover event handlers and producers when
+   * registering/unregistering an object.
    */
   Bus(ThreadEnforcer enforcer, String identifier, HandlerFinder handlerFinder) {
-    this.enforcer =  enforcer;
+    this.enforcer = enforcer;
     this.identifier = identifier;
     this.handlerFinder = handlerFinder;
   }
@@ -170,12 +188,15 @@ public class Bus {
   }
 
   /**
-   * Registers all handler methods on {@code object} to receive events and producer methods to provide events.
+   * Registers all handler methods on {@code object} to receive events and producer methods to
+   * provide events.
    * <p>
-   * If any subscribers are registering for types which already have a producer they will be called immediately
+   * If any subscribers are registering for types which already have a producer they will be called
+   * immediately
    * with the result of calling that producer.
    * <p>
-   * If any producers are registering for types which already have subscribers, each subscriber will be called with
+   * If any producers are registering for types which already have subscribers, each subscriber will
+   * be called with
    * the value from the result of calling the producer.
    *
    * @param object object whose handler methods should be registered.
@@ -194,9 +215,13 @@ public class Bus {
       EventProducer previousProducer = producersByType.putIfAbsent(type, producer);
       //checking if the previous producer existed
       if (previousProducer != null) {
-        throw new IllegalArgumentException("Producer method for type " + type
-          + " found on type " + producer.target.getClass()
-          + ", but already registered by type " + previousProducer.target.getClass() + ".");
+        throw new IllegalArgumentException("Producer method for type "
+            + type
+            + " found on type "
+            + producer.target.getClass()
+            + ", but already registered by type "
+            + previousProducer.target.getClass()
+            + ".");
       }
       Set<EventHandler> handlers = handlersByType.get(type);
       if (handlers != null && !handlers.isEmpty()) {
@@ -214,7 +239,7 @@ public class Bus {
         Set<EventHandler> handlersCreation = new CopyOnWriteArraySet<EventHandler>();
         handlers = handlersByType.putIfAbsent(type, handlersCreation);
         if (handlers == null) {
-            handlers = handlersCreation;
+          handlers = handlersCreation;
         }
       }
       final Set<EventHandler> foundHandlers = foundHandlersMap.get(type);
@@ -238,6 +263,27 @@ public class Bus {
         }
       }
     }
+  }
+
+  /**
+   * Registers a new EventHandler for events of the provided type that will execute
+   * the provided callback whenever it is posted.
+   *
+   * @param type event class to subscribe to.
+   * @param callback Callback instance that will be executed when an event of the
+   * provided type is posted.
+   */
+  public void register(Class type, Callback callback) {
+    Set<EventHandler> handlers = handlersByType.get(type);
+    if (handlers == null) {
+      //concurrent put if absent
+      Set<EventHandler> handlersCreation = new CopyOnWriteArraySet<EventHandler>();
+      handlers = handlersByType.putIfAbsent(type, handlersCreation);
+      if (handlers == null) {
+        handlers = handlersCreation;
+      }
+    }
+    handlers.add(new EventHandler(callback));
   }
 
   private void dispatchProducerResultToHandler(EventHandler handler, EventProducer producer) {
@@ -273,9 +319,9 @@ public class Bus {
       EventProducer value = entry.getValue();
 
       if (value == null || !value.equals(producer)) {
-        throw new IllegalArgumentException(
-            "Missing event producer for an annotated method. Is " + object.getClass()
-                + " registered?");
+        throw new IllegalArgumentException("Missing event producer for an annotated method. Is "
+            + object.getClass()
+            + " registered?");
       }
       producersByType.remove(key).invalidate();
     }
@@ -286,9 +332,9 @@ public class Bus {
       Collection<EventHandler> eventMethodsInListener = entry.getValue();
 
       if (currentHandlers == null || !currentHandlers.containsAll(eventMethodsInListener)) {
-        throw new IllegalArgumentException(
-            "Missing event handler for an annotated method. Is " + object.getClass()
-                + " registered?");
+        throw new IllegalArgumentException("Missing event handler for an annotated method. Is "
+            + object.getClass()
+            + " registered?");
       }
 
       for (EventHandler handler : currentHandlers) {
@@ -301,10 +347,38 @@ public class Bus {
   }
 
   /**
-   * Posts an event to all registered handlers.  This method will return successfully after the event has been posted to
+   * Unregisters a Callback for a particular event type.
+   *
+   * @param type event class to unsubscribe from.
+   * @param callback Callback instance that would be executed when an event of the
+   * provided type was posted.
+   */
+  public void unregister(Class type, Callback callback) {
+    Set<EventHandler> currentHandlers = getHandlersForEventType(type);
+    if (currentHandlers == null) {
+      throw new IllegalArgumentException("There are no EventHandlers for type " + type);
+    }
+    EventHandler eventHandler = null;
+    for (EventHandler candidate : currentHandlers) {
+      if (candidate.hasCallback(callback)) {
+        eventHandler = candidate;
+      }
+    }
+    if (eventHandler == null) {
+      throw new IllegalArgumentException(
+          "There is no EventHandler for type " + type + " with callback " + callback);
+    }
+    eventHandler.invalidate();
+    currentHandlers.remove(eventHandler);
+  }
+
+  /**
+   * Posts an event to all registered handlers.  This method will return successfully after the
+   * event has been posted to
    * all handlers, and regardless of any exceptions thrown by handlers.
    *
-   * <p>If no handlers have been subscribed for {@code event}'s class, and {@code event} is not already a
+   * <p>If no handlers have been subscribed for {@code event}'s class, and {@code event} is not
+   * already a
    * {@link DeadEvent}, it will be wrapped in a DeadEvent and reposted.
    *
    * @param event event to post.
@@ -338,7 +412,8 @@ public class Bus {
   }
 
   /**
-   * Queue the {@code event} for dispatch during {@link #dispatchQueuedEvents()}. Events are queued in-order of
+   * Queue the {@code event} for dispatch during {@link #dispatchQueuedEvents()}. Events are queued
+   * in-order of
    * occurrence so they can be dispatched in the same order.
    */
   protected void enqueueEvent(Object event, EventHandler handler) {
@@ -346,7 +421,8 @@ public class Bus {
   }
 
   /**
-   * Drain the queue of events to be dispatched. As the queue is being drained, new events may be posted to the end of
+   * Drain the queue of events to be dispatched. As the queue is being drained, new events may be
+   * posted to the end of
    * the queue.
    */
   protected void dispatchQueuedEvents() {
@@ -374,7 +450,8 @@ public class Bus {
   }
 
   /**
-   * Dispatches {@code event} to the handler in {@code wrapper}.  This method is an appropriate override point for
+   * Dispatches {@code event} to the handler in {@code wrapper}.  This method is an appropriate
+   * override point for
    * subclasses that wish to make event delivery asynchronous.
    *
    * @param event event to dispatch.
@@ -390,7 +467,8 @@ public class Bus {
   }
 
   /**
-   * Retrieves the currently registered producer for {@code type}.  If no producer is currently registered for
+   * Retrieves the currently registered producer for {@code type}.  If no producer is currently
+   * registered for
    * {@code type}, this method will return {@code null}.
    *
    * @param type type of producer to retrieve.
@@ -401,7 +479,8 @@ public class Bus {
   }
 
   /**
-   * Retrieves a mutable set of the currently registered handlers for {@code type}.  If no handlers are currently
+   * Retrieves a mutable set of the currently registered handlers for {@code type}.  If no handlers
+   * are currently
    * registered for {@code type}, this method may either return {@code null} or an empty set.
    *
    * @param type type of handlers to retrieve.
@@ -412,7 +491,8 @@ public class Bus {
   }
 
   /**
-   * Flattens a class's type hierarchy into a set of Class objects.  The set will include all superclasses
+   * Flattens a class's type hierarchy into a set of Class objects.  The set will include all
+   * superclasses
    * (transitively), and all interfaces implemented by these superclasses.
    *
    * @param concreteClass class whose type hierarchy will be retrieved.
